@@ -7,15 +7,26 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.List;
 
 @WebFilter("/*")
 public class AuthenticationFilter implements Filter {
 
     private ServletContext context;
+    private List<String> allowedServlets;
 
     public void init(FilterConfig fConfig) throws ServletException {
         this.context = fConfig.getServletContext();
         this.context.log(">>> AuthenticationFilter initialized");
+
+        // Initialize the list of allowed servlets
+        allowedServlets = Arrays.asList(
+                "/demo/saveServlet",
+                "/demo/viewByIDServlet",
+                "/demo/loginServlet",
+                "/demo/viewServlet"
+        );
     }
 
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
@@ -24,16 +35,11 @@ public class AuthenticationFilter implements Filter {
         HttpServletResponse res = (HttpServletResponse) response;
 
         String uri = req.getRequestURI();
-
         this.context.log("Requested Resource::http://localhost:8080" + uri);
 
         HttpSession session = req.getSession(false);
 
-        if (session == null && !(
-                uri.endsWith("demo/saveServlet") ||
-                        uri.endsWith("demo/viewByIDServlet") ||
-                        uri.endsWith("demo/loginServlet") ||
-                        uri.endsWith("demo/viewServlet"))) {
+        if (session == null && !isAllowedServlet(uri)) {
             this.context.log("<<< Unauthorized access request");
             PrintWriter out = res.getWriter();
             out.println("No access!!!");
@@ -42,7 +48,11 @@ public class AuthenticationFilter implements Filter {
         }
     }
 
+    private boolean isAllowedServlet(String uri) {
+        return allowedServlets.stream().anyMatch(uri::endsWith);
+    }
+
     public void destroy() {
-        //close any resources here
+        // Close any resources here
     }
 }

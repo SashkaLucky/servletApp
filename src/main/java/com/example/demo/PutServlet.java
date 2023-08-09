@@ -14,9 +14,7 @@ public class PutServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        response.setContentType("text/html");
-        PrintWriter out = response.getWriter();
-
+        // логіка обробки запросів
         String sid = request.getParameter("id");
         int id = Integer.parseInt(sid);
 
@@ -26,11 +24,16 @@ public class PutServlet extends HttpServlet {
         Employee employee = new Employee(id, name, email, request.getParameter("country"));
 
         int status = EmployeeRepository.update(employee);
+
+        // логування результатів
         if (status > 0) {
-            response.sendRedirect("viewByIDServlet?id=68");
+            System.out.println("Record updated successfully");
+            response.sendRedirect("viewByIDServlet?id=" + id);
         } else {
+            System.out.println("Failed to update record");
+            PrintWriter out = response.getWriter();
             out.println("Sorry! unable to update record");
+            out.close();
         }
-        out.close();
     }
 }
